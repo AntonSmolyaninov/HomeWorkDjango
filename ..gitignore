@@ -1,0 +1,15 @@
+# Байт-код, оптимизированные / DLL-файлы
+__pycache__/
+
+
+# Файлы конфигурации для venv
+venv/
+.env
+
+# Файлы покрытия, кэши и прочие ненужные файлы
+.covera
+.cache/
+.idea
+Thumbs.db
+local_settings.py
+db.sqlite3
