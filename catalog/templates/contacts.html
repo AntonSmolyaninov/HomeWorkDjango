@@ -1,10 +1,11 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Skystore</title>
-    <!-- Подключите статичеcкие файлы со стилями Bootstrap -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 </head>
 <body>
 <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
@@ -59,7 +60,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="message">Сообщение</label>
-                            <textarea type="text" name="message" class="form-control" id="message" placeholder="Контактный телефон" required></textarea>
+                            <textarea type="text" name="message" class="form-control" id="message" placeholder="Ваш текст" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-lg btn-block btn-outline-primary">Отправить</button>
                     </form>
@@ -100,6 +101,6 @@
     </footer>
 </div>
 
-<!-- Подключите статичеcкие файлы со скриптами Bootstrap -->
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>
