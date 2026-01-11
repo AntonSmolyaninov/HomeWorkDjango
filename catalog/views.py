@@ -1,19 +1,19 @@
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
 
 def home(request):
-    return render(request, 'home.html')
+    return render(request, "home.html")
 
 
 def contacts(request):
     if request.method == "POST":
-        name = request.POST.get('name', 'Гость')
-        message = request.POST.get('message', '')
+        name = request.POST.get("name", "Гость")
+        message = request.POST.get("message", "")
         if not message.strip():
-            return render(request, 'contacts.html', {'error': 'Введите сообщение!'})
+            return render(request, "contacts.html", {"error": "Введите сообщение!"})
         return HttpResponse(f"Спасибо. {name}! Сообщение доставленно.")
 
-    success = request.GET.get('success') == '1'
-    return render(request, 'contacts.html', {'success': success})
+    success = request.GET.get("success") == "1"
+    return render(request, "contacts.html", {"success": success})
