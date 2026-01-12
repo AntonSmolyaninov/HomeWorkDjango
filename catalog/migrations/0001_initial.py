@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "description_category",
-                    models.DateField(verbose_name="Описание категории"),
+                    models.TextField(verbose_name="Описание категории"),
                 ),
             ],
             options={

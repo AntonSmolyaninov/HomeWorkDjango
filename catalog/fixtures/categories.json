@@ -1,0 +1,26 @@
+[
+  {
+    "model": "catalog.category",
+    "pk": 1,
+    "fields": {
+      "name_category": "Рассылки",
+      "description_category": "Сервисы для массовых рассылок"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 2,
+    "fields": {
+      "name_category": "Телеграм боты",
+      "description_category": "Боты для Telegram"
+    }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 3,
+    "fields": {
+      "name_category": "Веб-приложения",
+      "description_category": "Готовые веб-приложения"
+    }
+  }
+]

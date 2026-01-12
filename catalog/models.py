@@ -11,7 +11,7 @@ class Product(models.Model):
         max_length=150, verbose_name="Описание", help_text="Введите описание продукта"
     )
     image = models.ImageField(
-        upload_to="product/image",
+        upload_to="'catalog/product/image",
         blank=True,
         null=True,
         verbose_name="Изображение",
@@ -41,7 +41,7 @@ class Product(models.Model):
 
 class Category(models.Model):
     name_category = models.CharField(max_length=200, verbose_name="Название категории")
-    description_category = models.DateField(verbose_name="Описание категории")
+    description_category = models.TextField(verbose_name="Описание категории")
 
     def __str__(self):
         return self.name_category
@@ -51,3 +51,15 @@ class Category(models.Model):
         verbose_name_plural = "категории"
         ordering = ["name_category"]
 
+
+class ContactInfo(models.Model):
+    company_name = models.CharField("Компания", max_length=255, blank=True)
+    country = models.CharField("Страна", max_length=100, blank=True)
+    inn = models.CharField("ИНН", max_length=20, blank=True)
+    address = models.CharField("Адрес", max_length=255, blank=True)
+    phone = models.CharField("Телефон", max_length=50, blank=True)
+    email = models.EmailField("Email", blank=True)
+    working_hours = models.CharField("Часы работы", max_length=100, blank=True)
+
+    def __str__(self):
+        return self.company_name or "Контактные данные"
