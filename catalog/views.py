@@ -1,19 +1,20 @@
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse
+
+from catalog.models import Product, ContactInfo
 
 
 def home(request):
-    return render(request, 'home.html')
+    latest_products = Product.objects.order_by('-created_at')[:5]
+
+    # Вывод в консоль
+    print("Последние 5 продуктов:")
+    for product in latest_products:
+        print(f"{product.name_product} - {product.created_at}")
+
+    return render(request, "home.html", {"latest_products": latest_products})
 
 
 def contacts(request):
-    if request.method == "POST":
-        name = request.POST.get('name', 'Гость')
-        message = request.POST.get('message', '')
-        if not message.strip():
-            return render(request, 'contacts.html', {'error': 'Введите сообщение!'})
-        return HttpResponse(f"Спасибо. {name}! Сообщение доставленно.")
-
-    success = request.GET.get('success') == '1'
-    return render(request, 'contacts.html', {'success': success})
+    contacts = ContactInfo.objects.all()
+    return render(request, 'contacts.html', {'contacts': contacts})

@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,29 +26,54 @@
             <div class="card mb-4 box-shadow">
                 <div class="card-body">
                     <table class="table table-striped">
-                        <tr>
-                            <td class="w-25">Страна</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <td class="w-25">ИНН</td>
-                            <td>91-1144442</td>
-                        </tr>
-                        <tr>
-                            <td class="w-25">Адрес</td>
-                            <td>Redmond,WA,98052-6399</td>
-                        </tr>
+                        {% if contacts %}
+                            {% for contact in contacts %}
+                                <tr>
+                                    <td class="w-25">Страна</td>
+                                    <td>{{ contact.country|default:"Не указано" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="w-25">ИНН</td>
+                                    <td>{{ contact.inn|default:"Не указано" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="w-25">Адрес</td>
+                                    <td>{{ contact.address|default:"Не указано" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="w-25">Телефон</td>
+                                    <td>{{ contact.phone|default:"Не указано" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="w-25">Email</td>
+                                    <td>{{ contact.email|default:"Не указано" }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="2">Контактные данные отсутствуют.</td>
+                            </tr>
+                        {% endif %}
                     </table>
                 </div>
             </div>
         </div>
+
         <div class="col-lg-3 col-md-6 col-sm-12">
             <div class="card mb-4 box-shadow">
                 <div class="card-header">
                     <h4 class="my-0 font-weight-normal">Свяжитесь с нами</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="" class="form-floating">
+
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                    {% if success %}
+                        <div class="alert alert-success">Спасибо! Ваше сообщение отправлено.</div>
+                    {% endif %}
+
+                    <form method="post" action="">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="name">Имя</label>
@@ -60,7 +85,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="message">Сообщение</label>
-                            <textarea type="text" name="message" class="form-control" id="message" placeholder="Ваш текст" required></textarea>
+                            <textarea name="message" class="form-control" id="message" placeholder="Ваш текст" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-lg btn-block btn-outline-primary">Отправить</button>
                     </form>
@@ -100,7 +125,6 @@
         </div>
     </footer>
 </div>
-
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>
