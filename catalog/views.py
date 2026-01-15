@@ -1,20 +1,20 @@
+from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
-
 from catalog.models import Product, ContactInfo
+from django.shortcuts import get_object_or_404
 
 
 def home(request):
-    latest_products = Product.objects.order_by('-created_at')[:5]
-
-    # Вывод в консоль
-    print("Последние 5 продуктов:")
-    for product in latest_products:
-        print(f"{product.name_product} - {product.created_at}")
-
-    return render(request, "home.html", {"latest_products": latest_products})
+    all_products = Product.objects.all().order_by('-created_at')
+    return render(request, "home.html", {"latest_products": all_products})
 
 
 def contacts(request):
-    contacts = ContactInfo.objects.all()
+    contacts: QuerySet[ContactInfo, ContactInfo] = ContactInfo.objects.all()
     return render(request, 'contacts.html', {'contacts': contacts})
+
+
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    return render(request, "product_detail.html", {"product": product})

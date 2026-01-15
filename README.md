@@ -17,5 +17,5 @@
 - `django-admin startproject config .` - создание django проекта c настройками в директории config
 - `python manage.py startapp "name app"` - создание приложения
 ## Запуск
-`poetry run python manage.py runserver`
+- `poetry run python manage.py runserver`
 

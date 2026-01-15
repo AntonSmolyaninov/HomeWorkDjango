@@ -11,7 +11,7 @@ class Product(models.Model):
         max_length=150, verbose_name="Описание", help_text="Введите описание продукта"
     )
     image = models.ImageField(
-        upload_to="'catalog/product/image",
+        upload_to="'catalog/image",
         blank=True,
         null=True,
         verbose_name="Изображение",

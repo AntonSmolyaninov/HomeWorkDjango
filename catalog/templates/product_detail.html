@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name_product }} - Детали товара{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1>{{ product.name_product }}</h1>
+    {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name_product }}" class="img-fluid mb-3">
+    {% else %}
+        <p>Изображение отсутствует</p>
+        <!-- Или можно вставить картинку-заглушку -->
+        <!-- <img src="{% static 'images/no-image.png' %}" alt="No image" class="img-fluid mb-3"> -->
+    {% endif %}
+    <p><strong>Цена:</strong> ${{ product.purchase_price }}</p>
+    <p><strong>Описание:</strong> {{ product.description_product }}</p>
+    <a href="{% url 'catalog:home' %}" class="btn btn-outline-primary mt-3">← Назад в каталог</a>
+</div>
+{% endblock %}
