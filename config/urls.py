@@ -7,6 +7,7 @@ from config import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('catalog.urls', namespace='catalog')),  # urly в корне, без префикса /home/
+    path('blog/', include('blog.urls', namespace='blog')),
 ]
 
 if settings.DEBUG:
