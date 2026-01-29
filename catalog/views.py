@@ -1,20 +1,21 @@
-from django.db.models import QuerySet
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
 from catalog.models import Product, ContactInfo
-from django.shortcuts import get_object_or_404
 
+class HomePageView(ListView):
+    model = Product
+    template_name = "home.html"
+    context_object_name = "latest_products"
 
-def home(request):
-    all_products = Product.objects.all().order_by('-created_at')
-    return render(request, "home.html", {"latest_products": all_products})
+    def get_queryset(self):
+        return Product.objects.all().order_by('-created_at')
 
+class ContactPageView(ListView):
+    model = ContactInfo
+    template_name = "contacts.html"
+    context_object_name = "contacts"
 
-def contacts(request):
-    contacts: QuerySet[ContactInfo, ContactInfo] = ContactInfo.objects.all()
-    return render(request, 'contacts.html', {'contacts': contacts})
-
-
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    return render(request, "product_detail.html", {"product": product})
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = "product_detail.html"
+    context_object_name = "product"
