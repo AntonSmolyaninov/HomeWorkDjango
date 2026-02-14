@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}
+  {% if object %}
+    Редактирование продукта "{{ object.name_product }}"
+  {% else %}
+    Создать продукт
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<h1>
+  {% if object %}
+    Редактирование продукта "{{ object.name_product }}"
+  {% else %}
+    Создать продукт
+  {% endif %}
+</h1>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  {{ form.non_field_errors }}
+
+  <div class="mb-3">
+    {{ form.name_product.label_tag }}
+    {{ form.name_product }}
+    {{ form.name_product.errors }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.description_product.label_tag }}
+    {{ form.description_product }}
+    {{ form.description_product.errors }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.image.label_tag }}
+    {{ form.image }}
+    {{ form.image.errors }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.category.label_tag }}
+    {{ form.category }}
+    {{ form.category.errors }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.purchase_price.label_tag }}
+    {{ form.purchase_price }}
+    {{ form.purchase_price.errors }}
+  </div>
+
+  <button type="submit" class="btn btn-success">Сохранить</button>
+  <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}
