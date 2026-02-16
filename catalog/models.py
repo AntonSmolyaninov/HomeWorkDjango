@@ -8,20 +8,20 @@ class Product(models.Model):
         help_text="Введите наименование продукта",
     )
     description_product = models.TextField(
-        max_length=150, verbose_name="Описание", help_text="Введите описание продукта"
+        verbose_name="Описание", help_text="Введите описание продукта"
     )
     image = models.ImageField(
-        upload_to="'catalog/image",
+        upload_to="catalog/image",
         blank=True,
         null=True,
         verbose_name="Изображение",
-        help_text="Загрузите изоброжение продукта",
+        help_text="Загрузите изображение продукта",
     )
     category = models.ForeignKey(
         "Category",
         on_delete=models.SET_NULL,
         verbose_name="Категория",
-        help_text="Введите наименование категории",
+        help_text="Выберите категорию",
         blank=True,
         null=True,
         related_name="products",
@@ -29,10 +29,8 @@ class Product(models.Model):
     purchase_price = models.IntegerField(verbose_name="Цена за покупку")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     def __str__(self):
-        return f"{self.name_product} {self.description_product}"
-
+        return f"{self.name_product}"
     class Meta:
         verbose_name = "продукт"
         verbose_name_plural = "продукты"

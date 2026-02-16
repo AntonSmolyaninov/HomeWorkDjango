@@ -24,6 +24,11 @@
     <h1 class="display-4">Skystore</h1>
     <p class="lead">Skystore - это отличный вариант хранения ваших плагинов и примеров кода, который вы бы хотели продать</p>
 </div>
+<div class="mb-4 text-center">
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-lg btn-success">
+        Смотреть все продукты
+    </a>
+</div>
 <div class="row text-center">
     {% for product in latest_products %}
     <div class="col-3 d-flex align-items-stretch">
@@ -50,3 +55,4 @@
     {% endfor %}
 </div>
 {% endblock %}
+
