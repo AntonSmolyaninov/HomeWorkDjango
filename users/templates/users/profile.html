@@ -12,90 +12,72 @@
             <div class="card-body">
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
                     {% endfor %}
                 {% endif %}
-                
+
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    
+
                     {% if form.errors %}
                         <div class="alert alert-danger">
                             <strong>Ошибка!</strong> Пожалуйста, исправьте ошибки ниже:
-                            {{ form.errors }}
+                            <ul class="mb-0 mt-2">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
                         </div>
                     {% endif %}
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="{{ form.email.id_for_label }}" class="form-label">Email:</label>
                                 {{ form.email }}
-                                {% if form.email.errors %}
-                                    <div class="text-danger">{{ form.email.errors }}</div>
-                                {% endif %}
+                                <div class="form-text text-muted">Email нельзя изменить</div>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="{{ form.first_name.id_for_label }}" class="form-label">Имя:</label>
                                 {{ form.first_name }}
-                                {% if form.first_name.errors %}
-                                    <div class="text-danger">{{ form.first_name.errors }}</div>
-                                {% endif %}
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="{{ form.last_name.id_for_label }}" class="form-label">Фамилия:</label>
                                 {{ form.last_name }}
-                                {% if form.last_name.errors %}
-                                    <div class="text-danger">{{ form.last_name.errors }}</div>
-                                {% endif %}
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="{{ form.phone.id_for_label }}" class="form-label">Телефон:</label>
                                 {{ form.phone }}
-                                {% if form.phone.errors %}
-                                    <div class="text-danger">{{ form.phone.errors }}</div>
-                                {% endif %}
                                 <div class="form-text text-muted">Формат: 89123456789</div>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="{{ form.country.id_for_label }}" class="form-label">Страна:</label>
                                 {{ form.country }}
-                                {% if form.country.errors %}
-                                    <div class="text-danger">{{ form.country.errors }}</div>
-                                {% endif %}
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="{{ form.avatar.id_for_label }}" class="form-label">Аватар:</label>
                                 {{ form.avatar }}
-                                {% if form.avatar.errors %}
-                                    <div class="text-danger">{{ form.avatar.errors }}</div>
+                                {% if user.avatar %}
+                                    <div class="mt-2">
+                                        <img src="{{ user.avatar.url }}" alt="Аватар" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
-                    
-                    {% if user.avatar %}
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Текущий аватар</h5>
-                                </div>
-                                <div class="card-body text-center">
-                                    <img src="{{ user.avatar.url }}" alt="Аватар" class="img-thumbnail" style="max-width: 200px;">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
+
                     <div class="d-grid gap-2 mt-3">
                         <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                         <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary">На главную</a>
