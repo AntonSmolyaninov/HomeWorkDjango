@@ -9,8 +9,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path(
         "", include("catalog.urls", namespace="catalog")
-    ),  # urly в корне, без префикса /home/
-    path("blog/", include("blog.urls", namespace="blog")),
+    ),
+    path(
+        "blog/", include("blog.urls", namespace="blog")
+    ),
+    path("users/", include("users.urls", namespace="users")),
 ]
 
 if settings.DEBUG:
