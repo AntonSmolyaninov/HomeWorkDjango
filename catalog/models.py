@@ -1,7 +1,13 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Product(models.Model):
+    class PublicationStatus(models.TextChoices):
+        DRAFT = 'draft', 'Черновик'
+        PUBLISHED = 'published', 'Опубликовано'
+        ARCHIVED = 'archived', 'В архиве'
+
     name_product = models.CharField(
         max_length=150,
         verbose_name="Наименование",
@@ -29,12 +35,29 @@ class Product(models.Model):
     purchase_price = models.IntegerField(verbose_name="Цена за покупку")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Владелец",
+        related_name="products"
+    )
+    is_published = models.BooleanField(
+        default=False,
+        verbose_name="Опубликовано"
+    )
+
     def __str__(self):
         return f"{self.name_product}"
+
     class Meta:
         verbose_name = "продукт"
         verbose_name_plural = "продукты"
         ordering = ["name_product"]
+        permissions = [
+            ("can_unpublish_product", "Может отменять публикацию продукта"),
+        ]
 
 
 class Category(models.Model):
