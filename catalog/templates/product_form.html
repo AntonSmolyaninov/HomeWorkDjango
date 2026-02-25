@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block title %}
   {% if object %}
     Редактирование продукта "{{ object.name_product }}"
@@ -8,50 +9,229 @@
 {% endblock %}
 
 {% block content %}
-<h1>
-  {% if object %}
-    Редактирование продукта "{{ object.name_product }}"
-  {% else %}
-    Создать продукт
-  {% endif %}
-</h1>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card">
+        <div class="card-header">
+          <h1 class="h3 mb-0">
+            {% if object %}
+              <i class="bi bi-pencil-square"></i> Редактирование продукта "{{ object.name_product }}"
+            {% else %}
+              <i class="bi bi-plus-circle"></i> Создать новый продукт
+            {% endif %}
+          </h1>
+        </div>
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
+        <div class="card-body">
+          <!-- Отображение ошибок формы -->
+          {% if form.errors %}
+          <div class="alert alert-danger">
+            <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Исправьте следующие ошибки:</h5>
+            <ul class="mb-0">
+              {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                  <li>
+                    {% if field != '__all__' %}
+                      <strong>{{ field }}:</strong>
+                    {% endif %}
+                    {{ error }}
+                  </li>
+                {% endfor %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
 
-  {{ form.non_field_errors }}
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
 
-  <div class="mb-3">
-    {{ form.name_product.label_tag }}
-    {{ form.name_product }}
-    {{ form.name_product.errors }}
+            {{ form.non_field_errors }}
+
+            <!-- Поле: Наименование -->
+            <div class="mb-3">
+              <label for="{{ form.name_product.id_for_label }}" class="form-label">
+                {{ form.name_product.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.name_product }}
+              {% if form.name_product.help_text %}
+              <div class="form-text text-muted">{{ form.name_product.help_text }}</div>
+              {% endif %}
+              {% if form.name_product.errors %}
+              <div class="alert alert-danger mt-2">
+                {{ form.name_product.errors }}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Поле: Описание -->
+            <div class="mb-3">
+              <label for="{{ form.description_product.id_for_label }}" class="form-label">
+                {{ form.description_product.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.description_product }}
+              {% if form.description_product.help_text %}
+              <div class="form-text text-muted">{{ form.description_product.help_text }}</div>
+              {% endif %}
+              {% if form.description_product.errors %}
+              <div class="alert alert-danger mt-2">
+                {{ form.description_product.errors }}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Поле: Изображение -->
+            <div class="mb-3">
+              <label for="{{ form.image.id_for_label }}" class="form-label">
+                {{ form.image.label }}
+              </label>
+              {% if object and object.image %}
+              <div class="mb-2">
+                <img src="{{ object.image.url }}" alt="{{ object.name_product }}"
+                     class="img-thumbnail" style="max-height: 100px;">
+              </div>
+              {% endif %}
+              {{ form.image }}
+              {% if form.image.help_text %}
+              <div class="form-text text-muted">{{ form.image.help_text }}</div>
+              {% endif %}
+              {% if form.image.errors %}
+              <div class="alert alert-danger mt-2">
+                {{ form.image.errors }}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Поле: Категория -->
+            <div class="mb-3">
+              <label for="{{ form.category.id_for_label }}" class="form-label">
+                {{ form.category.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.category }}
+              {% if form.category.help_text %}
+              <div class="form-text text-muted">{{ form.category.help_text }}</div>
+              {% endif %}
+              {% if form.category.errors %}
+              <div class="alert alert-danger mt-2">
+                {{ form.category.errors }}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Поле: Цена -->
+            <div class="mb-3">
+              <label for="{{ form.purchase_price.id_for_label }}" class="form-label">
+                {{ form.purchase_price.label }}
+                <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                {{ form.purchase_price }}
+                <span class="input-group-text">₽</span>
+              </div>
+              {% if form.purchase_price.help_text %}
+              <div class="form-text text-muted">{{ form.purchase_price.help_text }}</div>
+              {% endif %}
+              {% if form.purchase_price.errors %}
+              <div class="alert alert-danger mt-2">
+                {{ form.purchase_price.errors }}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Поле: Статус публикации (только для модераторов) -->
+            {% if form.is_published %}
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                {{ form.is_published }}
+                <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
+                  {{ form.is_published.label }}
+                </label>
+                {% if form.is_published.help_text %}
+                <div class="form-text text-muted">{{ form.is_published.help_text }}</div>
+                {% endif %}
+              </div>
+              {% if form.is_published.errors %}
+              <div class="alert alert-danger mt-2">
+                {{ form.is_published.errors }}
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Информация о владельце (только для существующих продуктов) -->
+            {% if object and object.owner %}
+            <div class="mb-3">
+              <div class="alert alert-info">
+                <small>
+                  <i class="bi bi-person-circle"></i>
+                  <strong>Владелец:</strong> {{ object.owner.username }}<br>
+                  <i class="bi bi-calendar"></i>
+                  <strong>Дата создания:</strong> {{ object.created_at|date:"d.m.Y H:i" }}
+                </small>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Кнопки действий -->
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Отмена
+              </a>
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i>
+                {% if object %}
+                  Сохранить изменения
+                {% else %}
+                  Создать продукт
+                {% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Информационный блок с правилами -->
+      <div class="card mt-3">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-info-circle"></i>
+            Правила создания продукта:
+          </h5>
+          <ul class="small text-muted mb-0">
+            <li>Название должно содержать минимум 3 символа</li>
+            <li>Описание должно содержать минимум 10 символов</li>
+            <li>Цена не может быть отрицательной или превышать 1 000 000 ₽</li>
+            <li>Изображение должно быть в формате JPEG или PNG, размером до 5 МБ</li>
+            <li>Запрещены слова: казино, криптовалюта, биржа, дешево, бесплатно, обман, полиция, радар</li>
+          </ul>
+
+          {% if not object %}
+          <div class="alert alert-warning mt-3 mb-0">
+            <i class="bi bi-shield-check"></i>
+            <strong>Важно!</strong> После создания продукт будет отправлен на модерацию.
+            Опубликовать продукт смогут только модераторы.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
-  <div class="mb-3">
-    {{ form.description_product.label_tag }}
-    {{ form.description_product }}
-    {{ form.description_product.errors }}
-  </div>
-
-  <div class="mb-3">
-    {{ form.image.label_tag }}
-    {{ form.image }}
-    {{ form.image.errors }}
-  </div>
-
-  <div class="mb-3">
-    {{ form.category.label_tag }}
-    {{ form.category }}
-    {{ form.category.errors }}
-  </div>
-
-  <div class="mb-3">
-    {{ form.purchase_price.label_tag }}
-    {{ form.purchase_price }}
-    {{ form.purchase_price.errors }}
-  </div>
-
-  <button type="submit" class="btn btn-success">Сохранить</button>
-  <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary">Отмена</a>
-</form>
+<!-- Добавляем немного кастомных стилей -->
+<style>
+  .alert-danger ul {
+    margin-bottom: 0;
+  }
+  .invalid-feedback {
+    display: block;
+  }
+  .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+  }
+</style>
 {% endblock %}

@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class Product(models.Model):
@@ -24,7 +24,7 @@ class Product(models.Model):
         help_text="Загрузите изображение продукта",
     )
     category = models.ForeignKey(
-        "Category",
+        "Category",  # Используем строковое название модели
         on_delete=models.SET_NULL,
         verbose_name="Категория",
         help_text="Выберите категорию",
@@ -35,17 +35,30 @@ class Product(models.Model):
     purchase_price = models.IntegerField(verbose_name="Цена за покупку")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Поле владельца
     owner = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         verbose_name="Владелец",
-        related_name="products"
+        related_name="products",
+        help_text="Владелец продукта"
     )
+
+    # Поле статуса публикации
     is_published = models.BooleanField(
         default=False,
-        verbose_name="Опубликовано"
+        verbose_name="Опубликовано",
+        help_text="Отметьте, чтобы опубликовать продукт"
+    )
+
+    publication_status = models.CharField(
+        max_length=20,
+        choices=PublicationStatus.choices,
+        default=PublicationStatus.DRAFT,
+        verbose_name="Статус публикации"
     )
 
     def __str__(self):
@@ -54,7 +67,7 @@ class Product(models.Model):
     class Meta:
         verbose_name = "продукт"
         verbose_name_plural = "продукты"
-        ordering = ["name_product"]
+        ordering = ["name_product", "-created_at"]
         permissions = [
             ("can_unpublish_product", "Может отменять публикацию продукта"),
         ]
