@@ -3,14 +3,15 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user_model
 
 from catalog.forms import ProductForm, ProductModeratorForm, ProductOwnerForm
-from catalog.models import ContactInfo, Product, Category  # Импортируем Category
+from catalog.models import ContactInfo, Product, Category
+from catalog.services import get_all_products
 
 User = get_user_model()
 
@@ -21,20 +22,20 @@ class HomePageView(ListView):
     context_object_name = "latest_products"
 
     def get_queryset(self):
-        # Для обычных пользователей показываем только опубликованные
+        # Для модераторов показываем все продукты, для остальных только опубликованные
         if self.request.user.is_authenticated and self.request.user.groups.filter(name='Модератор продуктов').exists():
-            # Модераторы видят все продукты
-            return Product.objects.all().order_by("-created_at")[:6]
+            products = get_all_products()
         else:
-            # Обычные пользователи видят только опубликованные
-            return Product.objects.filter(is_published=True).order_by("-created_at")[:6]
+            products = Product.objects.filter(is_published=True).select_related('category', 'owner')
+
+        return products.order_by("-created_at")[:6]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         # Добавляем статистику
         context['total_products'] = Product.objects.filter(is_published=True).count()
-        context['total_categories'] = Category.objects.count()  # Теперь Category импортирована
+        context['total_categories'] = Category.objects.count()
         context['total_sellers'] = User.objects.filter(products__isnull=False).distinct().count()
 
         # Проверяем, является ли пользователь модератором
@@ -59,18 +60,11 @@ class ProductListView(ListView):
     paginate_by = 9
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-
-        # Фильтр по статусу для модераторов
-        status = self.request.GET.get('status')
-        if status == 'pending' and user.is_authenticated and user.groups.filter(name='Модератор продуктов').exists():
-            queryset = queryset.filter(is_published=False)
-
-        # Фильтр по владельцу
-        owner_id = self.request.GET.get('owner')
-        if owner_id and user.is_authenticated:
-            queryset = queryset.filter(owner_id=owner_id)
+        # Для модераторов используем кэш, для остальных фильтруем
+        if self.request.user.is_authenticated and self.request.user.groups.filter(name='Модератор продуктов').exists():
+            queryset = get_all_products()
+        else:
+            queryset = Product.objects.filter(is_published=True).select_related('category', 'owner')
 
         # Фильтр по категории
         category = self.request.GET.get('category')
@@ -85,18 +79,14 @@ class ProductListView(ListView):
                 Q(description_product__icontains=search)
             )
 
-        # Если пользователь не модератор, показываем только опубликованные
-        if not user.is_authenticated or not user.groups.filter(name='Модератор продуктов').exists():
-            queryset = queryset.filter(is_published=True)
-
-        return queryset.select_related('category', 'owner').distinct()
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
 
         context['is_moderator'] = user.is_authenticated and user.groups.filter(name='Модератор продуктов').exists()
-        context['categories'] = Category.objects.all()  # Добавляем категории для фильтрации
+        context['categories'] = Category.objects.all()
 
         return context
 
@@ -176,9 +166,11 @@ class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         user = self.request.user
         product = self.get_object()
 
+        # Модераторы могут редактировать любые продукты
         if user.groups.filter(name='Модератор продуктов').exists():
             return True
 
+        # Обычные пользователи - только свои
         return user == product.owner
 
     def handle_no_permission(self):
@@ -218,9 +210,81 @@ class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
+class CategoryProductsView(ListView):
+    """
+    Представление для отображения продуктов в конкретной категории
+    """
+    model = Product
+    template_name = "catalog/category_products.html"
+    context_object_name = "products"
+    paginate_by = 12
+
+    def get_queryset(self):
+        # Получаем ID категории из URL
+        category_id = self.kwargs.get('category_id')
+
+        # Проверяем, является ли пользователь модератором
+        is_moderator = self.request.user.is_authenticated and self.request.user.groups.filter(
+            name='Модератор продуктов'
+        ).exists()
+
+        # Получаем продукты категории с учетом прав
+        if is_moderator:
+            products = Product.objects.filter(category_id=category_id).select_related('category', 'owner')
+        else:
+            products = Product.objects.filter(
+                category_id=category_id,
+                is_published=True
+            ).select_related('category', 'owner')
+
+        # Поиск
+        search = self.request.GET.get('search')
+        if search:
+            products = products.filter(
+                Q(name_product__icontains=search) |
+                Q(description_product__icontains=search)
+            )
+
+        # Сортировка
+        sort = self.request.GET.get('sort', 'name')
+        if sort == 'price_asc':
+            products = products.order_by('purchase_price')
+        elif sort == 'price_desc':
+            products = products.order_by('-purchase_price')
+        elif sort == 'newest':
+            products = products.order_by('-created_at')
+        else:
+            products = products.order_by('name_product')
+
+        return products
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Получаем категорию
+        category_id = self.kwargs.get('category_id')
+        category = get_object_or_404(Category, pk=category_id)
+
+        user = self.request.user
+        is_moderator = user.is_authenticated and user.groups.filter(
+            name='Модератор продуктов'
+        ).exists()
+
+        # Добавляем информацию в контекст
+        context.update({
+            'category': category,
+            'is_moderator': is_moderator,
+            'current_sort': self.request.GET.get('sort', 'name'),
+            'search_query': self.request.GET.get('search', ''),
+        })
+
+        return context
+
+
 @login_required
 @permission_required('catalog.can_unpublish_product', raise_exception=True)
 def unpublish_product(request, pk):
+    """Отмена публикации продукта (только для модераторов)"""
     product = get_object_or_404(Product, pk=pk)
 
     if request.method == 'POST':
@@ -230,3 +294,89 @@ def unpublish_product(request, pk):
         return redirect('catalog:product_detail', pk=pk)
 
     return render(request, 'unpublish_confirm.html', {'product': product})
+
+
+class CategoryListView(ListView):
+    """
+    Представление для отображения списка всех категорий
+    """
+    model = Category
+    template_name = "category_list.html"  # Убрали catalog/
+    context_object_name = "categories"
+
+    def get_queryset(self):
+        from django.db.models import Count
+        return Category.objects.annotate(
+            product_count=Count('products', filter=Q(products__is_published=True))
+        ).order_by('name_category')
+
+
+class CategoryProductsView(ListView):
+    """
+    Представление для отображения продуктов в конкретной категории
+    """
+    model = Product
+    template_name = "category_products.html"  # Убрали catalog/
+    context_object_name = "products"
+    paginate_by = 12
+
+    def get_queryset(self):
+        # Получаем ID категории из URL
+        category_id = self.kwargs.get('category_id')
+
+        # Проверяем, является ли пользователь модератором
+        is_moderator = self.request.user.is_authenticated and self.request.user.groups.filter(
+            name='Модератор продуктов'
+        ).exists()
+
+        # Получаем продукты категории с учетом прав
+        if is_moderator:
+            products = Product.objects.filter(category_id=category_id).select_related('category', 'owner')
+        else:
+            products = Product.objects.filter(
+                category_id=category_id,
+                is_published=True
+            ).select_related('category', 'owner')
+
+        # Поиск
+        search = self.request.GET.get('search')
+        if search:
+            products = products.filter(
+                Q(name_product__icontains=search) |
+                Q(description_product__icontains=search)
+            )
+
+        # Сортировка
+        sort = self.request.GET.get('sort', 'name')
+        if sort == 'price_asc':
+            products = products.order_by('purchase_price')
+        elif sort == 'price_desc':
+            products = products.order_by('-purchase_price')
+        elif sort == 'newest':
+            products = products.order_by('-created_at')
+        else:
+            products = products.order_by('name_product')
+
+        return products
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Получаем категорию
+        category_id = self.kwargs.get('category_id')
+        category = get_object_or_404(Category, pk=category_id)
+
+        user = self.request.user
+        is_moderator = user.is_authenticated and user.groups.filter(
+            name='Модератор продуктов'
+        ).exists()
+
+        # Добавляем информацию в контекст
+        context.update({
+            'category': category,
+            'is_moderator': is_moderator,
+            'current_sort': self.request.GET.get('sort', 'name'),
+            'search_query': self.request.GET.get('search', ''),
+        })
+
+        return context

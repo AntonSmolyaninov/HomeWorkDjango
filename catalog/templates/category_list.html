@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Категории продуктов{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Категории продуктов</h1>
+    
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ category.name_category }}</h5>
+                    <p class="card-text">{{ category.description_category|truncatechars:100 }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">Продуктов: {{ category.product_count }}</small>
+                    </p>
+                    <a href="{% url 'catalog:category_products' category.id %}" class="btn btn-primary">
+                        Смотреть продукты
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p>Категории не найдены.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
