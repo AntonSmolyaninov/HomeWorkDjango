@@ -1,12 +1,57 @@
 {% extends "base.html" %}
+
 {% block title %}Удаление продукта{% endblock %}
 
 {% block content %}
-<h1>Удалить продукт "{{ object.name_product }}"?</h1>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-6 offset-md-3">
+      <div class="card">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-exclamation-triangle"></i>
+            Подтверждение удаления
+          </h4>
+        </div>
 
-<form method="post">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-danger">Да, удалить</button>
-  <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary">Отмена</a>
-</form>
+        <div class="card-body">
+          <p>Вы уверены, что хотите удалить продукт?</p>
+
+          <div class="card mb-3 border-danger">
+            <div class="card-body">
+              <h5 class="card-title">{{ product.name_product }}</h5>
+              {% if product.image %}
+              <img src="{{ product.image.url }}" alt="{{ product.name_product }}"
+                   class="img-thumbnail mb-2" style="max-height: 100px;">
+              {% endif %}
+              <p class="card-text">{{ product.description_product|truncatechars:200 }}</p>
+              <p class="card-text">
+                <strong>Цена:</strong> {{ product.purchase_price }} ₽<br>
+                <strong>Категория:</strong> {{ product.category.name_category }}<br>
+                <strong>Владелец:</strong> {{ product.owner.username|default:"Не указан" }}
+              </p>
+            </div>
+          </div>
+
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-octagon"></i>
+            <strong>Внимание!</strong> Это действие нельзя отменить. Продукт будет полностью удален из системы.
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="{% url 'catalog:product_detail' product.pk %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Отмена
+              </a>
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Да, удалить
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

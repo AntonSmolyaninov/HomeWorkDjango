@@ -6,43 +6,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Skystore{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
-    <!-- Добавляем иконки Bootstrap Icons для красоты -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Дополнительные стили для конкретных страниц -->
+    {% block extra_style %}{% endblock %}
 </head>
 <body>
     <!-- Навигационное меню -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">Skystore</a>
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shop"></i> Skystore
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Главная</a>
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                            <i class="bi bi-house"></i> Главная
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'catalog:product_list' %}">Каталог</a>
+                        <a class="nav-link {% if 'catalog' in request.path %}active{% endif %}" href="{% url 'catalog:product_list' %}">
+                            <i class="bi bi-grid"></i> Каталог
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'blog:post_list' %}">Блог</a>
+                        <a class="nav-link {% if 'blog' in request.path %}active{% endif %}" href="{% url 'blog:post_list' %}">
+                            <i class="bi bi-pencil"></i> Блог
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/contacts/">Контакты</a>
+                        <a class="nav-link {% if 'contacts' in request.path %}active{% endif %}" href="/contacts/">
+                            <i class="bi bi-envelope"></i> Контакты
+                        </a>
                     </li>
                 </ul>
 
+                <!-- Поиск (для авторизованных) -->
+                {% if user.is_authenticated %}
+                <form class="d-flex me-2" action="{% url 'catalog:product_list' %}" method="get">
+                    <input class="form-control form-control-sm me-2" type="search" name="search"
+                           placeholder="Поиск продуктов..." aria-label="Search">
+                </form>
+                {% endif %}
+
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
+                        <!-- Индикатор модератора -->
+                        {% if user.groups.all %}
+                            {% for group in user.groups.all %}
+                                {% if group.name == 'Модератор продуктов' %}
+                                <li class="nav-item">
+                                    <span class="nav-link text-warning">
+                                        <i class="bi bi-shield-check"></i> Модератор
+                                    </span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- Быстрое создание продукта -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'catalog:product_create' %}" title="Создать продукт">
+                                <i class="bi bi-plus-circle"></i>
+                                <span class="d-lg-none"> Создать</span>
+                            </a>
+                        </li>
+
+                        <!-- Уведомления для модераторов -->
+                        {% if user.groups.all %}
+                            {% for group in user.groups.all %}
+                                {% if group.name == 'Модератор продуктов' %}
+                                <li class="nav-item">
+                                    <a class="nav-link position-relative" href="{% url 'catalog:product_list' %}?status=pending" title="Продукты на модерации">
+                                        <i class="bi bi-bell"></i>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                            {{ pending_products_count|default:"0" }}
+                                        </span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- Профиль пользователя -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ user.email|truncatechars:20 }}
+                                <i class="bi bi-person-circle"></i>
+                                <span class="d-none d-lg-inline">{{ user.email|truncatechars:20 }}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
+                                    <h6 class="dropdown-header">Привет, {{ user.first_name|default:user.username }}!</h6>
+                                </li>
+                                <li>
                                     <a class="dropdown-item" href="{% url 'users:profile' %}">
                                         <i class="bi bi-person"></i> Мой профиль
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'catalog:product_list' %}?owner={{ user.id }}">
+                                        <i class="bi bi-box"></i> Мои продукты
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
@@ -58,10 +125,14 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="btn btn-outline-light btn-sm me-2" href="{% url 'users:login' %}">Вход</a>
+                            <a class="btn btn-outline-light btn-sm me-2" href="{% url 'users:login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> Вход
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="btn btn-primary btn-sm" href="{% url 'users:register' %}">Регистрация</a>
+                            <a class="btn btn-primary btn-sm" href="{% url 'users:register' %}">
+                                <i class="bi bi-person-plus"></i> Регистрация
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -69,54 +140,80 @@
         </div>
     </nav>
 
+    <!-- Хлебные крошки -->
+    {% if request.path != '/' %}
+    <div class="container mt-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Главная</a></li>
+                {% block breadcrumbs %}{% endblock %}
+            </ol>
+        </nav>
+    </div>
+    {% endif %}
+
+    <!-- Сообщения -->
     <div class="container mt-3">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endif %}
     </div>
 
-    <div class="container mt-4">
-        {% block content %}{% endblock %}
-    </div>
+    <!-- Основной контент -->
+    <main>
+        <div class="container mt-4">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 
+    <!-- Footer -->
     <footer class="pt-4 my-md-5 pt-md-5 border-top">
         <div class="container">
             <div class="row">
                 <div class="col-12 col-md">
-                    SkyStore
-                    <small class="d-block mb-3 text-muted">&copy; 2023</small>
+                    <i class="bi bi-shop fs-2"></i>
+                    <small class="d-block mb-3 text-muted">&copy; 2023-{% now "Y" %} SkyStore</small>
                 </div>
                 <div class="col-6 col-md">
                     <h5>Категории</h5>
                     <ul class="list-unstyled text-small">
-                        <li><a class="text-muted" href="#">Рассылки</a></li>
-                        <li><a class="text-muted" href="#">Телеграм боты</a></li>
-                        <li><a class="text-muted" href="#">Полезные утилиты</a></li>
-                        <li><a class="text-muted" href="#">Веб-приложения</a></li>
-                        <li><a class="text-muted" href="#">Микросервисы</a></li>
+                        <li><a class="text-muted" href="{% url 'catalog:product_list' %}?category=Рассылки">Рассылки</a></li>
+                        <li><a class="text-muted" href="{% url 'catalog:product_list' %}?category=Телеграм боты">Телеграм боты</a></li>
+                        <li><a class="text-muted" href="{% url 'catalog:product_list' %}?category=Полезные утилиты">Полезные утилиты</a></li>
+                        <li><a class="text-muted" href="{% url 'catalog:product_list' %}?category=Веб-приложения">Веб-приложения</a></li>
+                        <li><a class="text-muted" href="{% url 'catalog:product_list' %}?category=Микросервисы">Микросервисы</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-md">
                     <h5>Дополнительно</h5>
                     <ul class="list-unstyled text-small">
-                        <li><a class="text-muted" href="{% url 'blog:post_list' %}">Мы пишем</a></li>
+                        <li><a class="text-muted" href="{% url 'blog:post_list' %}">Наш блог</a></li>
+                        {% if user.is_authenticated %}
+                        <li><a class="text-muted" href="{% url 'catalog:product_create' %}">Добавить продукт</a></li>
+                        {% endif %}
                     </ul>
                 </div>
                 <div class="col-6 col-md">
                     <h5>О нас</h5>
                     <ul class="list-unstyled text-small">
                         <li><a class="text-muted" href="/contacts/">Контакты</a></li>
+                        <li><a class="text-muted" href="#">О проекте</a></li>
+                        <li><a class="text-muted" href="#">Правила модерации</a></li>
                     </ul>
                 </div>
             </div>
         </div>
     </footer>
 
+    <!-- Bootstrap JS -->
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <!-- Дополнительные скрипты -->
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
